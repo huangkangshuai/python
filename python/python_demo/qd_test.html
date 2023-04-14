@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    div {
+      border-bottom: 1px solid gray;
+      padding-bottom: 10px;
+    }
+
+    table {
+      width: 100%;
+      text-align: center;
+      border: solid 1px gray;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="select">
+    <h3>查询数据</h3>
+    <table border cellspacing="0px" cellpading="0">
+      <tr class="tableT">
+        <th>ID</th>
+        <th>姓名</th>
+        <th>年龄</th>
+        <th>专业</th>
+        <th>爱好</th>
+      </tr>
+    </table>
+  </div>
+  <div id="add">
+    <h3>新增数据</h3>
+    姓名：<input type="text">
+    年龄：<input type="text">
+    专业：<input type="text">
+    爱好：<input type="text">
+    <button onclick="add()">提交</button>
+  </div>
+
+  <div id="edit">
+    <h3>编辑数据</h3>
+    <p>
+      姓名：<input type="text" class="name" placeholder="请输入需要修改的姓名"> <input class="name" type="text" placeholder="请输入修改后的姓名">
+      <button onclick="edit()">修改</button>
+    </p>
+  </div>
+  <div id="del">
+    <h3>根据姓名删除数据</h3>
+    姓名：<input type="text">
+    <button onclick="del()">删除</button>
+  </div>
+  <script>
+    let xhr = new XMLHttpRequest();
+
+    function ajax(methods, url, data) {
+      // xhr.setRequestHeader('Content-Type','text/json;charset=UTF-8')
+      xhr.open(methods, url, true)
+      xhr.send(data)
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            let res = xhr.responseText;
+            console.log(JSON.parse(res));
+            return JSON.parse(res)
+          }
+        }
+      }
+    }
+    let isFirstRender = true
+    const add = () => {
+      let inputs = document.querySelectorAll("#add input");
+      let addJson = {}
+      addJson.name = inputs[0].value
+      addJson.age = inputs[1].value
+      addJson.major = inputs[2].value
+      addJson.hobby = inputs[3].value
+      // let res = ajax(,)
+      xhr.open('post', 'http://localhost:3389/add', true)
+      xhr.send(JSON.stringify(addJson))
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            let res = xhr.responseText;
+            isFirstRender = false
+            alert(JSON.parse(res).msg);
+            select()
+          }
+        }
+      }
+    }
+    const edit = () => {
+      let names = document.querySelectorAll("#edit .name");
+      let addJson = {}
+      addJson.beforeName = names[0].value
+      addJson.afterName = names[1].value
+      xhr.open('put', 'http://localhost:3389/edit', true)
+      xhr.send(JSON.stringify(addJson))
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            let res = xhr.responseText;
+            isFirstRender = false
+            alert(JSON.parse(res).msg);
+            select()
+          }
+        }
+      }
+    }
+    const select = () => {
+      xhr.open('get', 'http://localhost:3389/select', true)
+      xhr.send()
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            let res = xhr.responseText;
+            let tdData = JSON.parse(res).data
+            let tableT = document.querySelector("table");
+            if(isFirstRender){
+              tdData.forEach(element => {
+                let tableB = document.createElement('tr')
+                tableB.className = 'tableB'
+                tableB.innerHTML = `
+                <td>${element.id}</td>
+                <td>${element.name}</td>
+                <td>${element.age}</td>
+                <td>${element.major}</td>
+                <td>${element.hobby}</td>
+                `
+                tableT.appendChild(tableB)
+              });
+            }else{
+              let delTableB = document.querySelectorAll('.tableB')
+              for(let i = 0;i<delTableB.length;i++){
+                tableT.removeChild(delTableB[i])
+              }
+              tdData.forEach(element => {
+                let tableB = document.createElement('tr')
+                tableB.className = 'tableB'
+                tableB.innerHTML = `
+                <td>${element.id}</td>
+                <td>${element.name}</td>
+                <td>${element.age}</td>
+                <td>${element.major}</td>
+                <td>${element.hobby}</td>
+                `
+                tableT.appendChild(tableB)
+              });
+            }
+          }
+        }
+      }
+    }
+    const del = () => {
+      let input = document.querySelector("#del input");
+      xhr.open('delete', 'http://localhost:3389/del?name=' + input.value, true)
+      xhr.send()
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            let res = xhr.responseText
+            isFirstRender = false
+            alert(JSON.parse(res).msg);
+            select()
+          }
+        }
+      }
+    }
+    select()
+  </script>
+</body>
+
+</html>
