@@ -13,6 +13,7 @@
 # with open('C:/Users/86185/Desktop/sogou.html', 'w', encoding='utf -8') as fp:
 #     fp.write(page_text)
 # print('爬取数据完毕！ ！ ！')
+import datetime
 import sys
 
 # list1 = [10, 20, 30, 40]
@@ -223,3 +224,5 @@ import functools
 # print(list(filter(fun, list1)))
 
 #ctrl z ctrl shift z ctrl f ctrl r
+
+print(datetime.datetime.today())
