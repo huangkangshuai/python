@@ -17,7 +17,6 @@
 # 在训练流程中，主要使用了sklearn库中的MLPClassifier和PCA两个模块。同时还使用了pandas和numpy库对数据进行处理和计算。在训练过程中，针对有空值的字段进行了处理，使用了MLP分类器进行预测填充空值。最后，对数据进行主成分分析，以提高模型效率和精度。
 import pandas as pd
 import numpy as np
-import pickle
 from sklearn.decomposition import PCA
 from sklearn.neural_network import MLPClassifier
 import joblib
