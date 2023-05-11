@@ -12,27 +12,32 @@ import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.neural_network import MLPClassifier
 import joblib
+from sklearn.cluster import KMeans
 
 np.seterr(divide='ignore',invalid='ignore')
-data = pd.read_csv('C:/Users/86185/Desktop/datatest.csv')
+data = pd.read_csv('C:/Users/86185/Desktop/datatest.csv', encoding='gbk')
 
 # 去除噪音
-Q1 = data.quantile(0.25)
-Q3 = data.quantile(0.75)
+numeric_cols = data.select_dtypes(include='number').columns
+Q1 = data[numeric_cols].quantile(0.25)
+Q3 = data[numeric_cols].quantile(0.75)
 IQR = Q3 - Q1
-data = data[~((data < (Q1 - 1.5 * IQR)) | (data > (Q3 + 1.5 * IQR))).any(axis=1)]
+data = data[~((data[numeric_cols] < (Q1 - 1.5 * IQR)) | (data[numeric_cols] > (Q3 + 1.5 * IQR))).any(axis=1)]
 
-# 枚举字段处理
+# 枚举字段处理 向量化处理
 for col in data.columns:
     if col.startswith('enum_'):
-        data[col] = data[col].apply(lambda x: int(x.split('_')[-1]))
-
-# 向量化处理
-for col in data.columns:
-    if col.startswith('enum_'):
-        data[col] = data[col].apply(lambda x: x - 1 if x != '' else 0)
+        unique_values = data[col].unique()
+        if len(unique_values) < 10:
+            # 少于 10 种分类
+            enum_map = {value: idx + 1 for idx, value in enumerate(unique_values)}
+            data[col] = data[col].map(enum_map).fillna(0).astype(int)
+        else:
+            # 大于等于 10 种分类
+            data[col] = data[col].fillna(0).astype(int)
     else:
-        data[col] = data[col].apply(lambda x: 0 if pd.isnull(x) else 1)
+        # 非枚举字段
+        data[col] = data[col].notna().astype(int)
 
 # 训练模型并将其存储在models字典中
 models = joblib.load('C:/Users/86185/Desktop/models.pkl')
@@ -58,7 +63,7 @@ pca = PCA(n_components=0.9)
 pca.fit(data.drop('label', axis=1))
 components = pca.transform(data.drop('label', axis=1))
 
-# 计算explained_variance_ratio_
+# 计算主成分分析（PCA）的解释方差比例
 explained_variance_ = pca.explained_variance_
 total_var = np.sum(explained_variance_)
 if total_var == 0:
